@@ -19,7 +19,14 @@ def get_user_info():
             "authorization": f"Bearer {token}"
         }
 
-        response = requests.get(url, headers=headers)
+        # إعداد البروكسي
+        proxies = {
+            "http": "http://customer-madmod_5b9rp-cc-it:psYWQ_rkEn5LwNb@pr.oxylabs.io:7777",
+            "https": "http://customer-madmod_5b9rp-cc-it:psYWQ_rkEn5LwNb@pr.oxylabs.io:7777"
+        }
+
+        # إرسال الطلب مع البروكسي
+        response = requests.get(url, headers=headers, proxies=proxies)
 
         if response.status_code != 200:
             return jsonify({"error": "Invalid token", "status_code": response.status_code}), response.status_code
