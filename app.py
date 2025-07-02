@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 # Proxy setup (SOCKS5)
 proxy = {
-    'http': 'socks5://customer-xxx@pr.oxylabs.io:7777',
-    'https': 'socks5://customer-xxx@pr.oxylabs.io:7777',
+    'http': 'socks5://customer-Drmina_wX6ib-cc-it:asd+oneTwo3456@pr.oxylabs.io:7777',
+    'https': 'socks5://customer-Drmina_wX6ib-cc-it:asd+oneTwo3456@pr.oxylabs.io:7777',
 }
 
 # Local file paths mapped by document type code
