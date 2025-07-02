@@ -1,50 +1,61 @@
 from flask import Flask, request, jsonify
 import requests
-import os
 
 app = Flask(__name__)
 
-@app.route('/get_user_info', methods=['POST'])
-def get_user_info():
+# Proxy configuration (تقدر تغيره حسب ما تحتاج)
+url_pr = "customer-madmod_5b9rp-cc-it:psYWQ_rkEn5LwNb@pr.oxylabs.io:7777"
+url_proxy = f'socks5://{url_pr}'
+proxy_data = {
+    'http': url_proxy,
+    'https': url_proxy,
+}
+
+def fetch_user_info(token, proxy):
+    url = 'https://egyiam.almaviva-visa.it/realms/oauth2-visaSystem-realm-pkce/protocol/openid-connect/userinfo'
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "accept-language": "ar",
+        "authorization": f"Bearer {token}",
+        "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "referrer": "https://egy.almaviva-visa.it/",
+        "referrerPolicy": "strict-origin-when-cross-origin",
+        "method": "GET",
+        "mode": "cors",
+        "credentials": "include"
+    }
+
     try:
-        data = request.get_json()
-        token = data.get("token")
+        response = requests.get(url, headers=headers, proxies=proxy, timeout=15)
+        response.raise_for_status()
+        user_info = response.json()
 
-        if not token:
-            return jsonify({"error": "Token is required"}), 400
-
-        url = 'https://egyiam.almaviva-visa.it/realms/oauth2-visaSystem-realm-pkce/protocol/openid-connect/userinfo'
-        headers = {
-            "accept": "application/json",
-            "authorization": f"Bearer {token}"
+        return {
+            "email": user_info.get("email"),
+            "family_name": user_info.get("family_name"),
+            "given_name": user_info.get("given_name"),
+            "phone_number": user_info.get("phone_number"),
+            "date_of_birth": user_info.get("dateOfBirth"),
+            "passport_number": user_info.get("passportNumber")
         }
 
-        # إعداد البروكسي
-        proxies = {
-            "http": "http://customer-madmod_5b9rp-cc-it:psYWQ_rkEn5LwNb@pr.oxylabs.io:7777",
-            "https": "http://customer-madmod_5b9rp-cc-it:psYWQ_rkEn5LwNb@pr.oxylabs.io:7777"
-        }
+    except requests.RequestException as e:
+        return {"error": str(e)}
+    except KeyError as e:
+        return {"error": f"Missing key in response: {e}"}
 
-        # إرسال الطلب مع البروكسي
-        response = requests.get(url, headers=headers, proxies=proxies)
+@app.route("/user_info", methods=["POST"])
+def get_user_info():
+    data = request.get_json()
+    token = data.get("token")
 
-        if response.status_code != 200:
-            return jsonify({"error": "Invalid token", "status_code": response.status_code}), response.status_code
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
 
-        info = response.json()
-        return jsonify({
-            "email": info.get("email"),
-            "family_name": info.get("family_name"),
-            "given_name": info.get("given_name"),
-            "phone_number": info.get("phone_number"),
-            "dateOfBirth": info.get("dateOfBirth"),
-            "passportNumber": info.get("passportNumber")
-        })
+    result = fetch_user_info(token, proxy_data)
+    return jsonify(result)
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
