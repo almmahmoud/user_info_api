@@ -5,10 +5,11 @@ import mimetypes
 
 app = Flask(__name__)
 
-# Proxy setup (SOCKS5)
-proxy = {
-    'http': 'socks5://customer-Drmina_wX6ib-cc-it:asd+oneTwo3456@pr.oxylabs.io:7777',
-    'https': 'socks5://customer-Drmina_wX6ib-cc-it:asd+oneTwo3456@pr.oxylabs.io:7777',
+url_pr = "customer-madmod_5b9rp-cc-it:psYWQ_rkEn5LwNb@pr.oxylabs.io:7777"
+url_proxy = f'socks5://{url_pr}'
+proxy_data = {
+    'http': url_proxy,
+    'https': url_proxy,
 }
 
 # Local file paths mapped by document type code
@@ -19,7 +20,7 @@ DOCUMENT_PATHS = {
 }
 
 @app.route('/user_info', methods=['POST'])
-def get_user_info_and_upload():
+def get_user_info_and_upload(proxy=proxy_data):
     try:
         data = request.get_json()
         token = data.get("token")
